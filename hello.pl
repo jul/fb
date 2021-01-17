@@ -27,7 +27,7 @@ $font{"e"} =[
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 1, 1, 1, 1, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0, 0,
     0, 1, 1, 1, 1, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
@@ -42,7 +42,7 @@ $font{"l"} =[
     0, 1, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
-    0, 0, 1, 1, 0, 0, 0, 0,
+    0, 0, 1, 1, 1, 1, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, ];
 
 $font{"o"} = [
@@ -54,16 +54,7 @@ $font{"o"} = [
     0, 1, 0, 0, 0, 1, 0, 0,
     0, 0, 1, 1, 1, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,];
-sub bigger {
-    my ($width,$height, $letter)= @_; 
-    my @new=();
-    for my $i (0 .. $height*$width) {
-        $new[2 * $i] = $letter->[$i];
-        $new[2* $i+1] = $letter->[$i];
-    }
-    return @new;
-}
-#print bigger 8,8, $font{"h"};
+
 sub go_at{
     my  ($fh, $x, $y)=@_;
     sysseek $fh, $x * $so_pixel+ ($y * $stride),0;
@@ -76,7 +67,7 @@ sub next_line{
 sub pr_char{ 
     my ($fh, $x, $y, $letter)=@_;
     go_at $fh, $x, $y;
-    my @black = (0, 0, 0, 0);
+    my @black = (0, 0, 0, 255);
     my @white = (255, 255,255,255);
     my $c=0;
     my $line="";
@@ -98,15 +89,28 @@ sub pr_char{
         }
     }
 }
+my $COL=0;
+my $CW=32;
+my $LIN=0;
+my $LW=32;
 
-sub pr { my ($r, $g, $b, $a)=@_; print "$r $g $b\n"; }
-
-my $sq=int($h/2);
-my $mc=255;
 open(my $fb, ">:raw", "/dev/fb0") or die;
-pr_char( $fb, 0, 0, "h");
-pr_char( $fb, 32, 0, "e");
-pr_char( $fb, 64,0, "l");
-pr_char( $fb, 96, 0, "l");
-pr_char( $fb, 128, 0, "o");
+sub nl {
+    $COL=0;
+    $LIN++;
+    go_at $fb, $COL*$CW, $LIN*$LW;
+}
+sub print_ {
+    for my $c (split //,@_[0]) {
+        if ($c =~ /"\n"/ ) {
+            nl;
+        } else {
+            pr_char $fb, $COL++ * $CW, $LIN * $LW, $c;
+        }
+    }
+    nl;
+}
+for my $i (0 ... 10) { 
+    print_ "hello lololol";
+}
 close($fb)
